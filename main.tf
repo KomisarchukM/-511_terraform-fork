@@ -38,3 +38,10 @@ module "web_bucket" {
   source_dir = "${path.root}/Web"
   tags       = var.tags
 }
+
+module "pics_bucket" {
+  source = "./modules/pics-bucket"
+
+  source_dir = "${path.root}/Pics"
+  tags       = var.tags
+}

@@ -27,3 +27,18 @@ output "web_bucket_name" {
   description = "Name of the static Web S3 bucket"
   value       = module.web_bucket.bucket_name
 }
+
+output "pics_bucket_name" {
+  description = "Name of the Pics S3 bucket"
+  value       = module.pics_bucket.bucket_name
+}
+
+output "pics_bucket_arn" {
+  description = "ARN of the Pics S3 bucket"
+  value       = module.pics_bucket.bucket_arn
+}
+
+output "pics_object_urls" {
+  description = "Public HTTPS URLs of uploaded Pics objects"
+  value       = module.pics_bucket.object_urls
+}
