@@ -14,10 +14,20 @@ security group in AWS (`eu-north-1`), using the default VPC.
 ├── secrets.auto.tfvars       # AWS credentials (gitignored, auto-loaded, NEVER commit)
 ├── secrets.tfvars.example    # template for secrets
 ├── modules/
-│   └── demo-server/        # single module: EC2 + security group + rules
+│   ├── demo-server/        # single module: EC2 + security group + rules
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   ├── web-bucket/         # static website S3 bucket hosting ./Web/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   └── pics-bucket/        # public S3 bucket for ./Pics/ with 3-day lifecycle
 │       ├── main.tf
 │       ├── variables.tf
 │       └── outputs.tf
+├── Web/                    # static website files uploaded by web-bucket
+├── Pics/                   # image files uploaded by pics-bucket
 ├── AGENTS.md               # system prompt for the AI agent
 └── README.md
 ```
@@ -30,6 +40,31 @@ security group in AWS (`eu-north-1`), using the default VPC.
 | `aws_security_group.this` | `SG_Terraform` |
 | `aws_security_group_rule.ingress` | `for_each` rules: SSH 22, HTTP 80, ICMP — all `0.0.0.0/0` |
 | `aws_security_group_rule.egress` | all outbound `0.0.0.0/0` |
+
+## Module `modules/web-bucket`
+
+Hosts the static website from `./Web/` in a publicly readable S3 bucket (`komisarchukm-<6 random letters>`).
+
+| Resource | Description |
+|---|---|
+| `random_string.suffix` | 6-letter lowercase random suffix for globally unique bucket name |
+| `aws_s3_bucket.this` | S3 bucket `komisarchukm-<suffix>` with `force_destroy = true` |
+| `aws_s3_bucket_public_access_block.this` | Public access blocks disabled to allow public read policy |
+| `aws_s3_bucket_policy.this` | Public `s3:GetObject` read policy on all bucket objects |
+| `aws_s3_object.this` | Uploads `./Web/` files under the `Web/` prefix with MIME content types |
+
+## Module `modules/pics-bucket`
+
+Creates an unversioned, publicly readable S3 bucket (`homework-15-11-komism-<6 random letters>`) containing all files from `./Pics/` at the bucket root, with automatic 3-day expiration.
+
+| Resource | Description |
+|---|---|
+| `random_string.suffix` | 6-letter lowercase random suffix for globally unique bucket name |
+| `aws_s3_bucket.this` | Default unversioned S3 bucket `homework-15-11-komism-<suffix>` (`force_destroy = true`) |
+| `aws_s3_bucket_public_access_block.this` | All public access blocks disabled (`false`) |
+| `aws_s3_bucket_policy.this` | `PublicReadAllObjects` policy allowing `s3:GetObject` for `*` on `${aws_s3_bucket.this.arn}/*` |
+| `aws_s3_bucket_lifecycle_configuration.this` | Expires current objects and noncurrent versions after 3 days |
+| `aws_s3_object.this` | Uploads all `./Pics/` files to the bucket root with image content types |
 
 ## Prerequisites
 
@@ -72,6 +107,11 @@ After apply you get:
 - `public_ip`
 - `private_ip`
 - `security_group_id`
+- `web_bucket_name`
+- `web_index_url`
+- `pics_bucket_name`
+- `pics_bucket_arn`
+- `pics_object_urls`
 
 ```powershell
 terraform output public_ip
