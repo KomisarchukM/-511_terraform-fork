@@ -17,3 +17,13 @@ output "security_group_id" {
   description = "ID of the security group"
   value       = module.demo_server.security_group_id
 }
+
+output "web_index_url" {
+  description = "Public HTTPS URL of the uploaded Web/index.html"
+  value       = module.web_bucket.index_url
+}
+
+output "web_bucket_name" {
+  description = "Name of the static Web S3 bucket"
+  value       = module.web_bucket.bucket_name
+}

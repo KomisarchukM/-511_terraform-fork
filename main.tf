@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 }
 
@@ -26,4 +30,11 @@ module "demo_server" {
   root_volume_size = var.root_volume_size
   sg_name          = var.sg_name
   tags             = var.tags
+}
+
+module "web_bucket" {
+  source = "./modules/web-bucket"
+
+  source_dir = "${path.root}/Web"
+  tags       = var.tags
 }
