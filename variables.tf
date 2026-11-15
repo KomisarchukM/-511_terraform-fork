@@ -19,7 +19,7 @@ variable "aws_region" {
 variable "instance_count" {
   description = "Number of EC2 instances to create"
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "aws_image_id" {
@@ -37,7 +37,7 @@ variable "aws_instance_type" {
 variable "aws_key_name" {
   description = "Name of the EC2 key pair for SSH access"
   type        = string
-  default     = "Stockholm_3"
+  default     = "Stokholm"
 }
 
 variable "instance_name" {

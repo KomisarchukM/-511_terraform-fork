@@ -5,15 +5,15 @@ resource "aws_instance" "this" {
   instance_type = var.instance_type
   key_name      = var.key_name
 
-  user_data = <<-EOT
-    #!/bin/bash
-    apt-get update -y
-    apt-get install -y apache2
-    systemctl enable --now apache2
-    TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-    PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
-    echo "<h1>Hello from $(hostname) - $PUBLIC_IP</h1>" > /var/www/html/index.html
-  EOT
+  # user_data = <<-EOT
+  #   #!/bin/bash
+  #   apt-get update -y
+  #   apt-get install -y apache2
+  #   systemctl enable --now apache2
+  #   TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+  #   PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+  #   echo "<h1>Hello from $(hostname) - $PUBLIC_IP</h1>" > /var/www/html/index.html
+  # EOT
 
   user_data_replace_on_change = true
 
