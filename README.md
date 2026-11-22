@@ -1,7 +1,8 @@
 # HMP621 — Terraform AWS Demo
 
-Terraform configuration that provisions a single Ubuntu EC2 instance with a
-security group in AWS (`eu-north-1`), using the default VPC.
+Terraform configuration that provisions Ubuntu EC2 instances with security
+groups in AWS (`eu-north-1`), using the default VPC — including two web servers
+behind an internet-facing Application Load Balancer.
 
 ## Structure
 
@@ -14,7 +15,11 @@ security group in AWS (`eu-north-1`), using the default VPC.
 ├── secrets.auto.tfvars       # AWS credentials (gitignored, auto-loaded, NEVER commit)
 ├── secrets.tfvars.example    # template for secrets
 ├── modules/
-│   ├── demo-server/        # single module: EC2 + security group + rules
+│   ├── demo-server/        # EC2 + security group + rules
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   ├── web-alb/            # 2 EC2s + security groups + internet-facing ALB
 │   │   ├── main.tf
 │   │   ├── variables.tf
 │   │   └── outputs.tf
@@ -40,6 +45,26 @@ security group in AWS (`eu-north-1`), using the default VPC.
 | `aws_security_group.this` | `SG_Terraform` |
 | `aws_security_group_rule.ingress` | `for_each` rules: SSH 22, HTTP 80, ICMP — all `0.0.0.0/0` |
 | `aws_security_group_rule.egress` | all outbound `0.0.0.0/0` |
+
+## Module `modules/web-alb`
+
+Two Ubuntu web servers running Apache behind an internet-facing Application
+Load Balancer in the default VPC. Each instance runs a `user_data` script that
+installs Apache and serves an `index.html` showing its public and private IP.
+Reloading the URL round-robins between the two instances.
+
+| Resource | Description |
+|---|---|
+| `data.aws_vpc.default` / `data.aws_subnets.default` | Default VPC and its subnets (ALB needs ≥2 AZs) |
+| `aws_security_group.alb` | `SG_Web_ALB` — HTTP 80 from `0.0.0.0/0` |
+| `aws_security_group.instances` | `SG_Web_ALB_Instances` — HTTP 80 from the ALB SG only, SSH/ICMP `0.0.0.0/0` |
+| `aws_security_group_rule.alb_ingress_http` / `.alb_egress` | ALB ingress/egress rules |
+| `aws_security_group_rule.instances_*` | Instance ingress (HTTP from ALB, SSH, ICMP) + egress |
+| `aws_instance.this` | 2× Ubuntu EC2 (`count = 2`), Apache via `user_data`, public IP, IMDSv2 required |
+| `aws_lb.this` | Internet-facing application load balancer |
+| `aws_lb_target_group.this` | HTTP target group, health check `GET /` → 200 |
+| `aws_lb_listener.this` | Port 80 → forward to target group |
+| `aws_lb_target_group_attachment.this` | Attaches both instances to the target group |
 
 ## Module `modules/web-bucket`
 
@@ -97,6 +122,10 @@ terraform apply
 # Only the demo-server module (quotes required in PowerShell)
 terraform plan  "-target=module.demo_server"
 terraform apply "-target=module.demo_server"
+
+# Only the web-alb module (2 EC2s + load balancer)
+terraform plan  "-target=module.web_alb"
+terraform apply "-target=module.web_alb"
 ```
 
 ## Outputs
@@ -112,9 +141,13 @@ After apply you get:
 - `pics_bucket_name`
 - `pics_bucket_arn`
 - `pics_object_urls`
+- `web_alb_dns_name`
+- `web_alb_url`
+- `web_alb_instance_public_ips`
 
 ```powershell
 terraform output public_ip
+terraform output web_alb_url
 ```
 
 ## Cleanup
@@ -138,9 +171,9 @@ terraform destroy
 | Variable | Default | Purpose |
 |---|---|---|
 | `aws_region` | `eu-north-1` | AWS region |
-| `aws_image_id` | `ami-0d6d8576c5ce37b8a` | AMI |
+| `aws_image_id` | `ami-035c8a091035e710a` | AMI |
 | `aws_instance_type` | `t3.small` | Instance type |
-| `aws_key_name` | `Stockholm_3` | EC2 key pair |
+| `aws_key_name` | `Stokholm` | EC2 key pair |
 | `root_volume_size` | `20` | Root volume GB |
 | `sg_name` | `SG_Terraform` | Security group name |
 | `tags` | project tags | Common tags |
