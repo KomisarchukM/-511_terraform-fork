@@ -42,3 +42,18 @@ output "pics_object_urls" {
   description = "Public HTTPS URLs of uploaded Pics objects"
   value       = module.pics_bucket.object_urls
 }
+
+output "web_alb_dns_name" {
+  description = "DNS name of the web Application Load Balancer"
+  value       = module.web_alb.alb_dns_name
+}
+
+output "web_alb_url" {
+  description = "HTTP URL of the web Application Load Balancer"
+  value       = module.web_alb.alb_url
+}
+
+output "web_alb_instance_public_ips" {
+  description = "Public IPs of the web instances behind the load balancer"
+  value       = module.web_alb.public_ip
+}
