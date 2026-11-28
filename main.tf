@@ -55,3 +55,13 @@ module "web_alb" {
   root_volume_size = var.root_volume_size
   tags             = var.tags
 }
+
+module "web_asg" {
+  source = "./modules/web-asg"
+
+  ami_id           = var.aws_image_id
+  instance_type    = var.web_asg_instance_type
+  key_name         = var.aws_key_name
+  root_volume_size = var.root_volume_size
+  tags             = var.tags
+}

@@ -58,6 +58,12 @@ variable "sg_name" {
   default     = "SG_Terraform"
 }
 
+variable "web_asg_instance_type" {
+  description = "EC2 instance type for the autoscaled web tier launch template"
+  type        = string
+  default     = "t3.micro"
+}
+
 variable "tags" {
   description = "Common tags for all resources"
   type        = map(string)

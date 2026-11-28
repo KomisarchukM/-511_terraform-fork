@@ -23,6 +23,10 @@ behind an internet-facing Application Load Balancer.
 │   │   ├── main.tf
 │   │   ├── variables.tf
 │   │   └── outputs.tf
+│   ├── web-asg/            # launch template + ALB + ASG (2–4 instances)
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
 │   ├── web-bucket/         # static website S3 bucket hosting ./Web/
 │   │   ├── main.tf
 │   │   ├── variables.tf
@@ -65,6 +69,24 @@ Reloading the URL round-robins between the two instances.
 | `aws_lb_target_group.this` | HTTP target group, health check `GET /` → 200 |
 | `aws_lb_listener.this` | Port 80 → forward to target group |
 | `aws_lb_target_group_attachment.this` | Attaches both instances to the target group |
+
+## Module `modules/web-asg`
+
+An autoscaled web tier: a launch template feeds an autoscaling group
+(min 2 / desired 2 / max 4) whose instances sit behind a non-sticky
+internet-facing Application Load Balancer. Same Apache `user_data` page as
+`web-alb`, so every reload may land on a different instance.
+
+| Resource | Description |
+|---|---|
+| `data.aws_vpc.default` / `data.aws_subnets.default` | Default VPC and its subnets |
+| `aws_security_group.alb` | `SG_Web_ASG_ALB` — HTTP 80 from `0.0.0.0/0` |
+| `aws_security_group.instances` | `SG_Web_ASG_Instances` — HTTP 80 from the ALB SG only, SSH 22 from `var.ssh_ingress_cidr` |
+| `aws_launch_template.this` | t3.micro Ubuntu, Apache via `user_data`, gp3 root volume, IMDSv2 required, public IP |
+| `aws_lb.this` | Internet-facing application load balancer (`web-asg-alb`) |
+| `aws_lb_target_group.this` | HTTP target group (`web-asg-tg`), health check `GET /` → 200, stickiness **disabled** (round-robin) |
+| `aws_lb_listener.this` | Port 80 → forward to target group |
+| `aws_autoscaling_group.this` | `web-asg`, min 2 / desired 2 / max 4, `health_check_type = "ELB"`, registers the target group |
 
 ## Module `modules/web-bucket`
 
@@ -126,6 +148,10 @@ terraform apply "-target=module.demo_server"
 # Only the web-alb module (2 EC2s + load balancer)
 terraform plan  "-target=module.web_alb"
 terraform apply "-target=module.web_alb"
+
+# Only the web-asg module (launch template + ALB + autoscaling group)
+terraform plan  "-target=module.web_asg"
+terraform apply "-target=module.web_asg"
 ```
 
 ## Outputs
@@ -144,6 +170,10 @@ After apply you get:
 - `web_alb_dns_name`
 - `web_alb_url`
 - `web_alb_instance_public_ips`
+- `web_asg_url`
+- `web_asg_alb_dns_name`
+- `web_asg_name`
+- `web_asg_instance_security_group_id`
 
 ```powershell
 terraform output public_ip
@@ -173,6 +203,7 @@ terraform destroy
 | `aws_region` | `eu-north-1` | AWS region |
 | `aws_image_id` | `ami-035c8a091035e710a` | AMI |
 | `aws_instance_type` | `t3.small` | Instance type |
+| `web_asg_instance_type` | `t3.micro` | Instance type for the autoscaled web tier |
 | `aws_key_name` | `Stokholm` | EC2 key pair |
 | `root_volume_size` | `20` | Root volume GB |
 | `sg_name` | `SG_Terraform` | Security group name |

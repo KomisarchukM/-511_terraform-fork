@@ -57,3 +57,23 @@ output "web_alb_instance_public_ips" {
   description = "Public IPs of the web instances behind the load balancer"
   value       = module.web_alb.public_ip
 }
+
+output "web_asg_url" {
+  description = "HTTP URL of the autoscaled web Application Load Balancer"
+  value       = module.web_asg.alb_url
+}
+
+output "web_asg_alb_dns_name" {
+  description = "DNS name of the autoscaled web Application Load Balancer"
+  value       = module.web_asg.alb_dns_name
+}
+
+output "web_asg_name" {
+  description = "Name of the autoscaling group serving the web tier"
+  value       = module.web_asg.asg_name
+}
+
+output "web_asg_instance_security_group_id" {
+  description = "ID of the security group attached to the autoscaled instances"
+  value       = module.web_asg.instance_security_group_id
+}
