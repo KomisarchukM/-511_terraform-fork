@@ -28,9 +28,9 @@ output "asg_name" {
   value       = aws_autoscaling_group.this.name
 }
 
-output "asg_instance_ids" {
-  description = "IDs of the instances currently managed by the autoscaling group"
-  value       = aws_autoscaling_group.this.instance_ids
+output "asg_arn" {
+  description = "ARN of the autoscaling group"
+  value       = aws_autoscaling_group.this.arn
 }
 
 output "alb_security_group_id" {

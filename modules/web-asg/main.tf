@@ -86,7 +86,7 @@ resource "aws_launch_template" "this" {
   image_id      = var.ami_id
   instance_type = var.instance_type
   key_name      = var.key_name
-  user_data     = base64encode(<<-EOT
+  user_data = base64encode(<<-EOT
 #!/bin/bash
 
 apt-get update -y
@@ -121,7 +121,8 @@ EOF
 EOT
   )
 
-  user_data_replace_on_change = true
+  # Note: launch templates are versioned, so a user_data change creates a new
+  # template version and the ASG picks it up via "$Latest".
 
   network_interfaces {
     device_index                = 0
